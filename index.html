@@ -1,1 +1,526 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Job Update</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+        .header h1 { font-size: 22px; margin-bottom: 5px; }
+        .header p { opacity: 0.9; font-size: 13px; }
+        .form-body { padding: 25px; }
+        .form-group { margin-bottom: 18px; }
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #333;
+            font-size: 14px;
+        }
+        .form-group label .required { color: #e74c3c; }
+        .form-control {
+            width: 100%;
+            padding: 12px 14px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        .form-control:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52,152,219,0.2);
+        }
+        select.form-control { background: white; cursor: pointer; }
+        textarea.form-control { resize: vertical; min-height: 80px; }
+        .input-type-selector { display: flex; gap: 10px; margin-bottom: 20px; }
+        .input-type-btn {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            background: white;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        .input-type-btn:hover { border-color: #3498db; background: #f8fbff; }
+        .input-type-btn.active { border-color: #3498db; background: #ebf5fb; }
+        .input-type-btn .icon { font-size: 28px; margin-bottom: 5px; }
+        .input-type-btn .label { font-size: 14px; font-weight: 600; color: #333; }
+        .voice-section, .text-section { display: none; }
+        .voice-section.active, .text-section.active { display: block; }
+        .voice-recorder { background: #f8f9fa; border-radius: 12px; padding: 20px; text-align: center; }
+        .voice-prompts {
+            background: #e8f4fd;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: left;
+            border-left: 4px solid #3498db;
+        }
+        .voice-prompts h4 { color: #2980b9; margin-bottom: 10px; font-size: 14px; }
+        .voice-prompts ul { margin-left: 18px; color: #555; font-size: 13px; }
+        .voice-prompts li { margin-bottom: 6px; }
+        .record-btn {
+            width: 80px; height: 80px; border-radius: 50%; border: none;
+            background: #e74c3c; color: white; font-size: 32px;
+            cursor: pointer; transition: all 0.3s; margin: 15px 0;
+        }
+        .record-btn:hover { transform: scale(1.1); }
+        .record-btn.recording { background: #c0392b; animation: pulse 1s infinite; }
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(231,76,60,0.4); }
+            50% { box-shadow: 0 0 0 15px rgba(231,76,60,0); }
+        }
+        .recording-status { font-size: 14px; color: #666; margin-top: 8px; }
+        .recording-status.recording { color: #e74c3c; font-weight: 600; }
+        .audio-preview { margin-top: 15px; display: none; }
+        .audio-preview.has-audio { display: block; }
+        .audio-preview audio { width: 100%; }
+        .audio-actions { display: flex; gap: 10px; margin-top: 10px; justify-content: center; }
+        .audio-action-btn { padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; }
+        .audio-action-btn.re-record { background: #f1f1f1; color: #333; }
+        .conditional-field { display: none; }
+        .conditional-field.show { display: block; }
+        .submit-btn {
+            width: 100%; padding: 14px;
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            color: white; border: none; border-radius: 8px;
+            font-size: 16px; font-weight: 600; cursor: pointer;
+            transition: all 0.3s; margin-top: 15px;
+        }
+        .submit-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(39,174,96,0.4); }
+        .submit-btn:disabled { background: #bdc3c7; cursor: not-allowed; transform: none; }
+        .error-message {
+            background: #fdeaea; border: 1px solid #f5c6cb; color: #721c24;
+            padding: 12px 15px; border-radius: 8px; margin-bottom: 15px; display: none;
+        }
+        .error-message.show { display: block; }
+        .error-message ul { margin: 8px 0 0 18px; }
+        .success-message {
+            background: #d4edda; border: 1px solid #c3e6cb; color: #155724;
+            padding: 20px; border-radius: 8px; text-align: center; display: none;
+        }
+        .success-message.show { display: block; }
+        .success-message h3 { margin-bottom: 8px; }
+        .loading-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5); display: none;
+            justify-content: center; align-items: center; z-index: 1000;
+        }
+        .loading-overlay.show { display: flex; }
+        .loading-spinner {
+            width: 45px; height: 45px; border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db; border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📋 Daily Job Update</h1>
+            <p>Quick update for your client</p>
+        </div>
+        <div class="form-body">
+            <div class="error-message" id="errorMessage"></div>
+            <div class="success-message" id="successMessage">
+                <h3>✅ Update Sent!</h3>
+                <p>Your client has been notified.</p>
+            </div>
+            <form id="statusForm">
+                <div class="form-group">
+                    <label>How would you like to submit?</label>
+                    <div class="input-type-selector">
+                        <div class="input-type-btn active" data-type="text" id="textBtn">
+                            <div class="icon">✍️</div>
+                            <div class="label">Type It</div>
+                        </div>
+                        <div class="input-type-btn" data-type="voice" id="voiceBtn">
+                            <div class="icon">🎤</div>
+                            <div class="label">Record It</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="text-section active" id="textSection">
+                    <div class="form-group">
+                        <label>Your Name <span class="required">*</span></label>
+                        <input type="text" class="form-control" id="workerName" placeholder="e.g., John Smith">
+                    </div>
+                    <div class="form-group">
+                        <label>Job/Project Name <span class="required">*</span></label>
+                        <input type="text" class="form-control" id="jobName" placeholder="e.g., Kitchen Remodel - Johnson">
+                    </div>
+                    <div class="form-group">
+                        <label>Client Email <span class="required">*</span></label>
+                        <input type="email" class="form-control" id="clientEmail" placeholder="client@example.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Days Left on Project <span class="required">*</span></label>
+                        <select class="form-control" id="daysLeft">
+                            <option value="">Select...</option>
+                            <option value="0">0 - Job Complete! 🎉</option>
+                            <option value="1">1 day</option>
+                            <option value="2">2 days</option>
+                            <option value="3">3 days</option>
+                            <option value="4">4 days</option>
+                            <option value="5">5 days</option>
+                            <option value="6">6 days</option>
+                            <option value="7">7 days</option>
+                            <option value="8+">8+ days</option>
+                        </select>
+                    </div>
+                    <div class="form-group conditional-field" id="arrivalTimeGroup">
+                        <label>What time will you arrive tomorrow? <span class="required">*</span></label>
+                        <select class="form-control" id="arrivalTime">
+                            <option value="">Select time...</option>
+                            <option value="7:00 AM">7:00 AM</option>
+                            <option value="7:30 AM">7:30 AM</option>
+                            <option value="8:00 AM">8:00 AM</option>
+                            <option value="8:30 AM">8:30 AM</option>
+                            <option value="9:00 AM">9:00 AM</option>
+                            <option value="9:30 AM">9:30 AM</option>
+                            <option value="10:00 AM">10:00 AM</option>
+                            <option value="10:30 AM">10:30 AM</option>
+                            <option value="11:00 AM">11:00 AM</option>
+                            <option value="12:00 PM">12:00 PM</option>
+                            <option value="1:00 PM">1:00 PM</option>
+                            <option value="2:00 PM">2:00 PM</option>
+                            <option value="TBD">TBD - Will confirm</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Issues or Concerns (optional)</label>
+                        <textarea class="form-control" id="issues" placeholder="Any problems or things the client should know..."></textarea>
+                    </div>
+                </div>
+                <div class="voice-section" id="voiceSection">
+                    <div class="form-group">
+                        <label>Client Email <span class="required">*</span></label>
+                        <input type="email" class="form-control" id="clientEmailVoice" placeholder="client@example.com">
+                    </div>
+                    <div class="voice-recorder">
+                        <div class="voice-prompts">
+                            <h4>📝 Please mention in your recording:</h4>
+                            <ul>
+                                <li>Your name</li>
+                                <li>The job/project name</li>
+                                <li>How many days are left on the project</li>
+                                <li>What time you will arrive tomorrow (if not last day)</li>
+                                <li>Any issues or concerns</li>
+                            </ul>
+                        </div>
+                        <button type="button" class="record-btn" id="recordBtn">🎤</button>
+                        <div class="recording-status" id="recordingStatus">Tap to start recording</div>
+                        <div class="audio-preview" id="audioPreview">
+                            <audio id="audioPlayback" controls></audio>
+                            <div class="audio-actions">
+                                <button type="button" class="audio-action-btn re-record" id="reRecordBtn">🔄 Re-record</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <input type="hidden" id="inputType" value="text">
+                <input type="hidden" id="audioData" value="">
+                <button type="submit" class="submit-btn" id="submitBtn">📤 Send Update</button>
+            </form>
+        </div>
+    </div>
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+    </div>
+<script>
+var mediaRecorder = null;
+var audioChunks = [];
+var isRecording = false;
+var recordingTimer = null;
+var recordingSeconds = 0;
+
+// YOUR N8N WEBHOOK URL - THIS IS WHERE FORM DATA IS SENT
+var WEBHOOK_URL = 'https://higproperties.app.n8n.cloud/webhook/job-status-update';
+
+document.getElementById('textBtn').addEventListener('click', function() {
+    selectInputType('text');
+});
+
+document.getElementById('voiceBtn').addEventListener('click', function() {
+    selectInputType('voice');
+});
+
+document.getElementById('daysLeft').addEventListener('change', function() {
+    toggleArrivalTime();
+});
+
+document.getElementById('recordBtn').addEventListener('click', function() {
+    toggleRecording();
+});
+
+document.getElementById('reRecordBtn').addEventListener('click', function() {
+    clearRecording();
+});
+
+document.getElementById('statusForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    submitForm();
+});
+
+function selectInputType(type) {
+    var btns = document.querySelectorAll('.input-type-btn');
+    for (var i = 0; i < btns.length; i++) {
+        if (btns[i].dataset.type === type) {
+            btns[i].classList.add('active');
+        } else {
+            btns[i].classList.remove('active');
+        }
+    }
+    if (type === 'text') {
+        document.getElementById('textSection').classList.add('active');
+        document.getElementById('voiceSection').classList.remove('active');
+    } else {
+        document.getElementById('textSection').classList.remove('active');
+        document.getElementById('voiceSection').classList.add('active');
+    }
+    document.getElementById('inputType').value = type;
+}
+
+function toggleArrivalTime() {
+    var daysLeft = document.getElementById('daysLeft').value;
+    var arrivalGroup = document.getElementById('arrivalTimeGroup');
+    if (daysLeft === '0' || daysLeft === '') {
+        arrivalGroup.classList.remove('show');
+        document.getElementById('arrivalTime').value = '';
+    } else {
+        arrivalGroup.classList.add('show');
+    }
+}
+
+function toggleRecording() {
+    if (isRecording) {
+        stopRecording();
+    } else {
+        startRecording();
+    }
+}
+
+function startRecording() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        showError(['Your browser does not support audio recording. Please use Chrome or Safari.']);
+        return;
+    }
+    
+    navigator.mediaDevices.getUserMedia({ audio: true })
+        .then(function(stream) {
+            mediaRecorder = new MediaRecorder(stream);
+            audioChunks = [];
+            
+            mediaRecorder.addEventListener('dataavailable', function(event) {
+                audioChunks.push(event.data);
+            });
+            
+            mediaRecorder.addEventListener('stop', function() {
+                var audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                var audioUrl = URL.createObjectURL(audioBlob);
+                document.getElementById('audioPlayback').src = audioUrl;
+                document.getElementById('audioPreview').classList.add('has-audio');
+                
+                var reader = new FileReader();
+                reader.onloadend = function() {
+                    document.getElementById('audioData').value = reader.result;
+                };
+                reader.readAsDataURL(audioBlob);
+                
+                var tracks = stream.getTracks();
+                for (var i = 0; i < tracks.length; i++) {
+                    tracks[i].stop();
+                }
+            });
+            
+            mediaRecorder.start();
+            isRecording = true;
+            recordingSeconds = 0;
+            
+            document.getElementById('recordBtn').classList.add('recording');
+            document.getElementById('recordBtn').textContent = '⏹️';
+            document.getElementById('recordingStatus').classList.add('recording');
+            
+            recordingTimer = setInterval(function() {
+                recordingSeconds++;
+                var mins = Math.floor(recordingSeconds / 60);
+                var secs = recordingSeconds % 60;
+                var secsStr = secs < 10 ? '0' + secs : secs;
+                document.getElementById('recordingStatus').textContent = 'Recording: ' + mins + ':' + secsStr;
+            }, 1000);
+        })
+        .catch(function(err) {
+            console.error('Microphone error:', err);
+            if (err.name === 'NotAllowedError') {
+                showError(['Microphone access denied. Please allow microphone access and try again.']);
+            } else {
+                showError(['Microphone error: ' + err.message]);
+            }
+        });
+}
+
+function stopRecording() {
+    if (mediaRecorder && isRecording) {
+        mediaRecorder.stop();
+        isRecording = false;
+        clearInterval(recordingTimer);
+        
+        document.getElementById('recordBtn').classList.remove('recording');
+        document.getElementById('recordBtn').textContent = '🎤';
+        document.getElementById('recordingStatus').classList.remove('recording');
+        document.getElementById('recordingStatus').textContent = 'Recording complete! Review below.';
+    }
+}
+
+function clearRecording() {
+    document.getElementById('audioData').value = '';
+    document.getElementById('audioPlayback').src = '';
+    document.getElementById('audioPreview').classList.remove('has-audio');
+    document.getElementById('recordingStatus').textContent = 'Tap to start recording';
+    audioChunks = [];
+}
+
+function showError(errors) {
+    var errorDiv = document.getElementById('errorMessage');
+    if (errors && errors.length > 0) {
+        var html = '<strong>Please fix:</strong><ul>';
+        for (var i = 0; i < errors.length; i++) {
+            html += '<li>' + errors[i] + '</li>';
+        }
+        html += '</ul>';
+        errorDiv.innerHTML = html;
+        errorDiv.classList.add('show');
+    } else {
+        errorDiv.classList.remove('show');
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function showSuccess() {
+    document.getElementById('statusForm').style.display = 'none';
+    document.getElementById('successMessage').classList.add('show');
+    document.getElementById('errorMessage').classList.remove('show');
+}
+
+function setLoading(loading) {
+    if (loading) {
+        document.getElementById('loadingOverlay').classList.add('show');
+    } else {
+        document.getElementById('loadingOverlay').classList.remove('show');
+    }
+    document.getElementById('submitBtn').disabled = loading;
+}
+
+function validateForm() {
+    var errors = [];
+    var inputType = document.getElementById('inputType').value;
+    
+    if (inputType === 'voice') {
+        var email = document.getElementById('clientEmailVoice').value.trim();
+        if (!email) {
+            errors.push('Client Email is required');
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            errors.push('Please enter a valid email');
+        }
+        if (!document.getElementById('audioData').value) {
+            errors.push('Please record your update');
+        }
+    } else {
+        if (!document.getElementById('workerName').value.trim()) {
+            errors.push('Your Name is required');
+        }
+        if (!document.getElementById('jobName').value.trim()) {
+            errors.push('Job/Project Name is required');
+        }
+        var email = document.getElementById('clientEmail').value.trim();
+        if (!email) {
+            errors.push('Client Email is required');
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            errors.push('Please enter a valid email');
+        }
+        if (!document.getElementById('daysLeft').value) {
+            errors.push('Days Left is required');
+        }
+        var daysLeft = document.getElementById('daysLeft').value;
+        if (daysLeft !== '0' && daysLeft !== '' && !document.getElementById('arrivalTime').value) {
+            errors.push('Arrival time is required');
+        }
+    }
+    return errors;
+}
+
+function submitForm() {
+    var errors = validateForm();
+    if (errors.length > 0) {
+        showError(errors);
+        return;
+    }
+    showError([]);
+    setLoading(true);
+    
+    var inputType = document.getElementById('inputType').value;
+    var clientEmail = inputType === 'voice' 
+        ? document.getElementById('clientEmailVoice').value.trim()
+        : document.getElementById('clientEmail').value.trim();
+    
+    var formData = {
+        inputType: inputType,
+        workerName: document.getElementById('workerName').value.trim(),
+        jobName: document.getElementById('jobName').value.trim(),
+        clientEmail: clientEmail,
+        daysLeft: document.getElementById('daysLeft').value,
+        arrivalTime: document.getElementById('arrivalTime').value,
+        issues: document.getElementById('issues').value.trim(),
+        audioData: document.getElementById('audioData').value
+    };
+    
+    fetch(WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+    })
+    .then(function(response) {
+        return response.json();
+    })
+    .then(function(result) {
+        if (result.success) {
+            showSuccess();
+        } else {
+            showError(result.errors || ['An error occurred. Please try again.']);
+        }
+    })
+    .catch(function(err) {
+        showError(['Network error. Please check your connection and try again.']);
+    })
+    .finally(function() {
+        setLoading(false);
+    });
+}
+</script>
+</body>
+</html>
