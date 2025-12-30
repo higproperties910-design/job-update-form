@@ -313,6 +313,51 @@ function selectInputType(type) {
     document.getElementById('inputType').value = type;
 }
 
+function resetForm() {
+    // Reset all input fields
+    document.getElementById('workerName').value = '';
+    document.getElementById('jobName').value = '';
+    document.getElementById('clientEmail').value = '';
+    document.getElementById('clientEmailVoice').value = '';
+    document.getElementById('daysLeft').value = '';
+    document.getElementById('arrivalTime').value = '';
+    document.getElementById('issues').value = '';
+    document.getElementById('audioData').value = '';
+    
+    // Reset to default input type (text)
+    selectInputType('text');
+    
+    // Clear any recording state
+    if (typeof mediaRecorder !== 'undefined' && mediaRecorder && mediaRecorder.state !== 'inactive') {
+        mediaRecorder.stop();
+    }
+    audioChunks = [];
+    
+    // Reset recording button if it exists
+    var recordBtn = document.getElementById('recordBtn');
+    if (recordBtn) {
+        recordBtn.innerHTML = '🎤 Start Recording';
+        recordBtn.classList.remove('recording');
+    }
+    
+    // Clear any audio preview
+    var audioPreview = document.getElementById('audioPreview');
+    if (audioPreview) {
+        audioPreview.style.display = 'none';
+        audioPreview.src = '';
+    }
+    
+    // Hide success message and show form
+    document.getElementById('successMessage').style.display = 'none';
+    document.getElementById('formContainer').style.display = 'block';
+    
+    // Clear any error messages
+    showError([]);
+    
+    // Scroll to top of page
+    window.scrollTo(0, 0);
+}
+
 function toggleArrivalTime() {
     var daysLeft = document.getElementById('daysLeft').value;
     var arrivalGroup = document.getElementById('arrivalTimeGroup');
